@@ -1,0 +1,24 @@
+body {
+	margin: 0pt;
+	color: white;
+	font-family:Verdana;
+    background-color: #c7c9cc;
+}
+div{
+	margin: 0pt;
+}
+td{
+	text-align: right;
+}
+.clear{
+	margin: 0pt;
+	background-image: url("clear.gif");
+	background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+.rain{
+	background-image: url("rain.png");
+	background-size: 100% 100%;
+    background-repeat: no-repeat;
+}
+

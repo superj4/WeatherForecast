@@ -1,0 +1,139 @@
+<html>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+<head>
+	<link rel="stylesheet" type="text/css" href="mystyle.css">
+  <title>Weather Forecast</title>
+  	<script>
+  		var app = angular.module('myApp', [])
+
+		app.controller('myTableCtrl', function($scope, $http) {
+			var data = {'location':{'latitude':'','longitude':''}};
+			$scope.date=new Date();
+			if (navigator.geolocation) navigator.geolocation.getCurrentPosition(onPositionUpdate); 
+			function onPositionUpdate(position) {
+    		var lat = position.coords.latitude;
+    		var lng = position.coords.longitude;
+    		var url = "https://maps.googleapis.com/maps/api/geocode/json?latlng=" + lat + "," + lng + "&sensor=true";
+    		$http.get(url)
+        	.then(function(result) {
+            	data.location.latitude = result.data.results[2].geometry.location.lat;
+            	data.location.longitude = result.data.results[2].geometry.location.lng;
+            	$http.post("http://localhost:3000/index", data).success(function (response) {
+      			$scope.myData = response;
+      			$scope.unit = 'k';
+      			$scope.numDays=$scope.myData.cnt;
+      			$scope.iconToday=$scope.myData.list[0].weather[0].icon;
+      			$scope.weatherToday=$scope.myData.list[0].weather[0].main;
+
+      			console.log($scope.myData);
+      			//*** handles the bottons***//
+      			$scope.groupUpdate = function($event) {
+      				if($event.target.id=='k'){
+      					if($scope.unit=='k') return;
+      					if($scope.unit=='f'){
+	      					for(var i=0; i<$scope.myData.list.length; i++){
+	        					$scope.myData.list[i].temp.day=FtoK($scope.myData.list[i].temp.day);
+	        					$scope.myData.list[i].temp.min=FtoK($scope.myData.list[i].temp.min);
+	        					$scope.myData.list[i].temp.max=FtoK($scope.myData.list[i].temp.max);
+	        				}
+      					}else if($scope.unit=='c'){
+	      					for(var i=0; i<$scope.myData.list.length; i++){
+	        					$scope.myData.list[i].temp.day=CtoK($scope.myData.list[i].temp.day);
+	        					$scope.myData.list[i].temp.min=CtoK($scope.myData.list[i].temp.min);
+	        					$scope.myData.list[i].temp.max=CtoK($scope.myData.list[i].temp.max);
+	        				}
+	      				}
+	      				$scope.unit='k';
+      				}else if($event.target.id=='f'){
+      					if($scope.unit=='f') return;
+	      				if($scope.unit=='k'){
+	      					for(var i=0; i<$scope.myData.list.length; i++){
+	        					$scope.myData.list[i].temp.day=KtoF($scope.myData.list[i].temp.day);
+	        					$scope.myData.list[i].temp.min=KtoF($scope.myData.list[i].temp.min);
+	        					$scope.myData.list[i].temp.max=KtoF($scope.myData.list[i].temp.max);
+	        				}
+	      				}else if($scope.unit=='c'){
+	      					for(var i=0; i<$scope.myData.list.length; i++){
+	        					$scope.myData.list[i].temp.day=CtoF($scope.myData.list[i].temp.day);
+	        					$scope.myData.list[i].temp.min=CtoF($scope.myData.list[i].temp.min);
+	        					$scope.myData.list[i].temp.max=CtoF($scope.myData.list[i].temp.max);
+	        				}
+	      				}
+	      				$scope.unit='f';
+      				}else if(event.target.id=='c'){
+      					if($scope.unit=='c') return;
+	      				if($scope.unit=='k'){
+	      					for(var i=0; i<$scope.myData.list.length; i++){
+	        					$scope.myData.list[i].temp.day=KtoC($scope.myData.list[i].temp.day);
+	        					$scope.myData.list[i].temp.min=KtoC($scope.myData.list[i].temp.min);
+	        					$scope.myData.list[i].temp.max=KtoC($scope.myData.list[i].temp.max);
+	        				}
+	      				}else if($scope.unit=='f'){
+	      					for(var i=0; i<$scope.myData.list.length; i++){
+	        					$scope.myData.list[i].temp.day=FtoC($scope.myData.list[i].temp.day);
+	        					$scope.myData.list[i].temp.min=FtoC($scope.myData.list[i].temp.min);
+	        					$scope.myData.list[i].temp.max=FtoC($scope.myData.list[i].temp.max);
+	        				}
+	      				}
+	      				$scope.unit='c';
+      				}
+    			}
+    			var KtoC = function(val){
+    				return val-273.15;
+    			}
+    			var FtoC = function(val){
+    				return (val- 32) * 5/9;
+    			}
+    			var CtoK = function(val){
+    				return val + 273.15;
+    			}
+    			var FtoK = function(val){
+    				return (val+459.67)*5/9;
+    			}
+    			var KtoF = function(val){
+    				return val * 9/5 - 459.67;
+    			}
+    			var CtoF = function(val){
+    				return val * 9/5 + 32;
+    			}
+  			}).error(function(){console.log("error!")})
+        	});
+		}
+
+		})
+	</script>
+</head>
+<div ng-app="myApp" ng-controller="myTableCtrl" ng-class="{'clear': weatherToday=='Clear', 'rain': weatherToday =='Rain'}">
+	<body>
+		<h1>{{myData.city.name + ', '+ myData.city.country}}</h1>
+		<p>Today is: {{date| date:"EEEE"}}</p>
+		<img ng-src={{"http://openweathermap.org/img/w/"+iconToday+".png"}}>
+		<p>Weather Forecast for {{numDays}} days.</p>
+	  	<button ng-click="groupUpdate($event)" type="button" id="k">Kelvin</button>
+	  	<button ng-click="groupUpdate($event)" type="button" id="f">Fahrenheit</button>
+	  	<button ng-click="groupUpdate($event)" type="button" id="c">Celsius</button>
+		<table style="width:100%">
+		<tr>
+		    <th>Date</th>
+		    <th>Weather</th> 
+		    <th>Average Temperature</th>
+		    <th>Min Temperature</th>
+		    <th>Max Temperature</th>
+		    <th>Pressure (hPa)</th>
+		    <th>Humidity (%)</th>
+		    <th>Speed (meter/sec)</th>
+		</tr>
+		<tr ng-repeat = "x in myData.list">
+			    <td>{{x.dt*1000 | date:'yyyy-MM-dd'}}</td>
+			    <td>{{x.weather[0].main}}</td>
+			    <td>{{x.temp.day|number:0}}</td> 
+			    <td>{{x.temp.min|number:0}}</td> 
+			    <td>{{x.temp.max|number:0}}</td> 
+			    <td>{{x.pressure}}</td>
+			    <td>{{x.humidity}}</td>
+			    <td>{{x.speed}}</td>
+		</tr>
+		</table>
+	</body>
+</div>
+</html>
